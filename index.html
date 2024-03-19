@@ -45,7 +45,7 @@
               <div class="flex space-x-3">
                 <input type="text" v-model="userInput" placeholder="Type your message here..."
                   class="flex-1 rounded-md shadow-sm p-2">
-                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                <button :disabled="isLoading" type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                   <svg v-if="isLoading" aria-hidden="true"
                     class="w-4 relative -top-0.5 mr-1 inline-block text-gray-200 animate-spin fill-blue-600"
                     viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -99,92 +99,14 @@
 <script type="module">
   import {FilesetResolver, LlmInference} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai';
   // import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+
   const modelFileName = 'gemma-2b-it-gpu-int4.bin'; /* Update the file name */
-
-  // // Local GemmaGPT Chat
-  // const GEMMA_GPT_AI_ENDPOINT = 'http://localhost:24315';
-
-  // const {
-  //   createApp,
-  //   ref
-  // } = Vue;
-
-  // createApp({
-  //   setup() {
-  //     const userInput = ref('');
-  //     const messages = ref([]);
-  //     const isLoading = ref(false);
-
-  //     const messageClasses = (role) => ({
-  //       // 'text-right justify-end': role === 'user',
-  //       'text-left justify-start': role === 'user',
-  //       'text-left justify-start': role === 'assistant',
-  //     });
-
-  //     async function sendMessage() {
-  //       if (!userInput.value.trim()) return;
-
-  //       // Append user message
-  //       messages.value.push({
-  //         role: 'user',
-  //         content: userInput.value
-  //       });
-  //       let prompt = userInput.value;
-
-  //       try {
-  //         isLoading.value = true
-  //         userInput.value = '';
-
-  //         // Send API request to GemmaGPT Chat endpoint
-  //         const response = await axios.post(
-  //           `${GEMMA_GPT_AI_ENDPOINT}/api/v1/chat`, {
-  //             prompt: prompt,
-  //             output_len: 100,
-  //           }, {
-  //             headers: {
-  //               'Content-Type': 'application/json',
-  //             },
-  //           }
-  //         );
-
-  //         /* response
-  //         {
-  //           "err": 0,
-  //           "msg": "success,
-  //           "prompt": "Where can I learn English?",
-  //           "output_len": 100,
-  //           "result": "Bạn có thể học tiếng Anh tại thư viện, các trung tâm ngoại ngữ và những người bản xứ. Ngoài ra, bạn cũng có thể tham gia vào cộng đồng nói tiếng Anh trực tuyến để thực hành kỹ năng của mình với mọi người từ khắp nơi trên thế giới.",
-  //         }
-  //         */
-
-  //         // Append GemmaGPT response
-  //         messages.value.push({
-  //           role: 'assistant',
-  //           content: response.data.result
-  //         });
-  //       } catch (error) {
-  //         console.error('There was an error with the API request', error);
-  //       } finally {
-  //         isLoading.value = false;
-  //       }
-  //     }
-
-  //     return {
-  //       userInput,
-  //       messages,
-  //       messageClasses,
-  //       sendMessage,
-  //       isLoading,
-  //     };
-  //   },
-  // }).mount('#app');
 
   var app = new Vue({
     el: "#app",
     data() {
       return {
         userInput: "",
-        messages: [],
         msgUser: "",
         msgAssistant: "",
         isLoading: true,
@@ -218,10 +140,10 @@
         }
       },
       async sendMessage() {
-        if (!this.userInput.trim()) return;
+        if (!this.userInput.trim() || this.isLoading) return;
 
         // Update user message
-        this.msgUser = this.userInput;
+        this.msgUser = this.userInput.trim();
 
         try {
           // Set status.
@@ -231,6 +153,7 @@
 
           // Call method GemmaGPT Chat
           this.llmInference.generateResponse(this.msgUser, this.displayPartialResults);
+
         } catch (error) {
           console.error('There was an error with the method GemmaGPT', error);
         } finally {
