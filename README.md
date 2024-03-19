@@ -10,10 +10,10 @@ Source code reference at [MediaPipe LLM GitHub](https://github.com/googlesamples
 ## Running the demo
 
 Follow the following instructions to run the sample on your device:
-1. Make a folder for the task, named as `gemmaweb`, and copy the `index.html` and folder `files` into your `gemmaweb` folder.
+1. Make a folder for the project, named as `gemmaweb`, and copy the `index.html` and folder `files` into your `gemmaweb` folder.
 2. Download [Gemma 2B](https://www.kaggle.com/models/google/gemma/frameworks/tfLite/variations/gemma-2b-it-gpu-int4) (TensorFlow Lite 2b-it-gpu-int4 or 2b-it-gpu-int8) or convert an external LLM (Phi-2, Falcon, or StableLM) following the [guide](https://developers.google.com/mediapipe/solutions/genai/llm_inference/web_js#convert-model) (only gpu backend is currently supported), into the `gemmaweb` folder.
 3. In your `index.html` file, update [`modelFileName`](https://github.com/googlesamples/mediapipe/blob/main/examples/llm_inference/js/index.js#L23) with your model file's name.
-4. Run `python3 -m http.server 8888` under the `gemmaweb` folder to host the three files (or `python -m SimpleHTTPServer 8888` for older python versions).
+4. Run `python3 -m http.server 8888` under the `gemmaweb` folder to host http server (or `python -m SimpleHTTPServer 8888` for older python versions).
 5. Open `localhost:8888` in Chrome. Then the button on the webpage will be enabled when the task is ready (~10 seconds).
 
 ```bash
