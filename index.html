@@ -1,15 +1,244 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>GemmaGPT Web Demo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/files/favicon.ico">
+  <title>GemmaGPT Chat Demo</title>
+  <!-- https://tailwindcss.com/docs/font-size -->
+  <script src="/files/tailwind.js"></script>
+  <!-- https://v2.vuejs.org/v2/guide/installation -->
+  <!-- <script src="/files/vue.global.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/vue@2.7.16/dist/vue.min.js"></script> -->
+  <script src="/files/axios.min.js"></script>
 </head>
+
 <body>
-    Input:<br />
-    <textarea id="input" style="height: 300px; width: 600px"></textarea><br />
-    <input type="button" id="submit" value="Get Response" disabled /><br />
-    <br />
-    Result:<br />
-    <textarea id="output" style="height: 300px; width: 600px"></textarea>
-    <script type="module" src="index.js"></script>
+  <main id="app" class="min-h-screen bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+
+      <div class="mb-4">
+        <h1 class="text-4xl font-bold text-center">GemmaGPT Chat Demo</h1>
+        <div class="mt-6">
+          <div class="flex items-center space-x-4 text-left justify-start">
+            <div class="flex-shrink-0">
+              <img class="w-8 h-8 rounded-full"
+                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTagONv1r-0HPnlnWClF12amS_KdrPX83zlhcXHyek&s"
+                alt="GemmaGPT Icon" />
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2 class="text-xl text-gray-800 break-normal text-left justify-start">
+                GemmaGPT là trợ lí Tiếng Anh, dựa trên mô hình ngôn ngữ lớn sử dụng những kỹ thuật tương tự như Gemini nhưng nhẹ hơn.
+              </h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flow-root">
+          <!-- Chat Input -->
+          <div class="mt-6">
+            <form @submit.prevent="sendMessage">
+              <div class="flex space-x-3">
+                <input type="text" v-model="userInput" placeholder="Type your message here..."
+                  class="flex-1 rounded-md shadow-sm p-2">
+                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                  <svg v-if="isLoading" aria-hidden="true"
+                    class="w-4 relative -top-0.5 mr-1 inline-block text-gray-200 animate-spin fill-blue-600"
+                    viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                      fill="currentColor" />
+                    <path
+                      d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                      fill="currentFill" />
+                  </svg>
+                  Send
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Chat Messages -->
+          <ul class="divide-y divide-gray-200">
+            <li class="py-3 sm:py-4" v-if="msgUser !== ''">
+              <div class="flex items-center space-x-4 text-left justify-start">
+                <div class="flex-shrink-0 text-lg font-bold">Me:</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-lg text-gray-800 break-normal text-left justify-start">
+                    {{ msgUser }}
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li class="py-3 sm:py-4" v-if="msgAssistant !== ''">
+              <div class="flex space-x-4 text-left justify-start">
+                <div class="flex-shrink-0 items-start mt-7">
+                  <img class="w-8 h-8 rounded-full"
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTagONv1r-0HPnlnWClF12amS_KdrPX83zlhcXHyek&s"
+                    alt="GemmaGPT Icon" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-base text-gray-800 break-normal whitespace-pre-line text-left justify-start">
+                    {{ msgAssistant }}
+                  </p>
+                </div>
+              </div>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
 </body>
+<script type="module">
+  import {FilesetResolver, LlmInference} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai';
+  // import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+  const modelFileName = 'gemma-2b-it-gpu-int4.bin'; /* Update the file name */
+
+  // // Local GemmaGPT Chat
+  // const GEMMA_GPT_AI_ENDPOINT = 'http://localhost:24315';
+
+  // const {
+  //   createApp,
+  //   ref
+  // } = Vue;
+
+  // createApp({
+  //   setup() {
+  //     const userInput = ref('');
+  //     const messages = ref([]);
+  //     const isLoading = ref(false);
+
+  //     const messageClasses = (role) => ({
+  //       // 'text-right justify-end': role === 'user',
+  //       'text-left justify-start': role === 'user',
+  //       'text-left justify-start': role === 'assistant',
+  //     });
+
+  //     async function sendMessage() {
+  //       if (!userInput.value.trim()) return;
+
+  //       // Append user message
+  //       messages.value.push({
+  //         role: 'user',
+  //         content: userInput.value
+  //       });
+  //       let prompt = userInput.value;
+
+  //       try {
+  //         isLoading.value = true
+  //         userInput.value = '';
+
+  //         // Send API request to GemmaGPT Chat endpoint
+  //         const response = await axios.post(
+  //           `${GEMMA_GPT_AI_ENDPOINT}/api/v1/chat`, {
+  //             prompt: prompt,
+  //             output_len: 100,
+  //           }, {
+  //             headers: {
+  //               'Content-Type': 'application/json',
+  //             },
+  //           }
+  //         );
+
+  //         /* response
+  //         {
+  //           "err": 0,
+  //           "msg": "success,
+  //           "prompt": "Where can I learn English?",
+  //           "output_len": 100,
+  //           "result": "Bạn có thể học tiếng Anh tại thư viện, các trung tâm ngoại ngữ và những người bản xứ. Ngoài ra, bạn cũng có thể tham gia vào cộng đồng nói tiếng Anh trực tuyến để thực hành kỹ năng của mình với mọi người từ khắp nơi trên thế giới.",
+  //         }
+  //         */
+
+  //         // Append GemmaGPT response
+  //         messages.value.push({
+  //           role: 'assistant',
+  //           content: response.data.result
+  //         });
+  //       } catch (error) {
+  //         console.error('There was an error with the API request', error);
+  //       } finally {
+  //         isLoading.value = false;
+  //       }
+  //     }
+
+  //     return {
+  //       userInput,
+  //       messages,
+  //       messageClasses,
+  //       sendMessage,
+  //       isLoading,
+  //     };
+  //   },
+  // }).mount('#app');
+
+  var app = new Vue({
+    el: "#app",
+    data() {
+      return {
+        userInput: "",
+        messages: [],
+        msgUser: "",
+        msgAssistant: "",
+        isLoading: true,
+        llmInference: null,
+      }
+    },
+    created() {
+      // loadData.
+      this.loadData();
+    },
+    methods: {
+      async loadData() {
+        const genaiFileset = await FilesetResolver.forGenAiTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm');
+        this.isLoading = true;
+        LlmInference
+            .createFromModelPath(genaiFileset, modelFileName)
+            .then(llm => {
+              this.llmInference = llm;
+              this.isLoading = false;
+            }).catch(() =>{
+              alert('Failed to initialize the task.');
+            });
+      },
+      displayPartialResults(partialResults, complete) {
+        // this.msgAssistant += marked.parse(partialResults);
+        this.msgAssistant += partialResults.replace(/\*/g, '');
+        if (complete) {
+          if (!this.msgAssistant) {
+            this.msgAssistant = 'Result is empty';
+          }
+        }
+      },
+      async sendMessage() {
+        if (!this.userInput.trim()) return;
+
+        // Update user message
+        this.msgUser = this.userInput;
+
+        try {
+          // Set status.
+          this.isLoading = true
+          this.userInput = '';
+          this.msgAssistant = '';
+
+          // Call method GemmaGPT Chat
+          this.llmInference.generateResponse(this.msgUser, this.displayPartialResults);
+        } catch (error) {
+          console.error('There was an error with the method GemmaGPT', error);
+        } finally {
+          this.isLoading = false;
+        }
+      },
+    },
+  })
+</script>
+
 </html>
