@@ -1,3 +1,6 @@
+gemma-2b-it-gpu-int4.bin
+gemma-2b-it-gpu-int8.bin
+
 # Logs
 logs
 *.log
